@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Growatt — Monitor em tempo real</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand">
+        <h1>Growatt <span class="muted">· monitor em tempo real</span></h1>
+      </div>
+      <div class="topbar-right">
+        <button class="icon-btn" id="accounts-btn" type="button" aria-label="Gerenciar contas" title="Gerenciar contas" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path fill="currentColor" d="M12.65 10a5.5 5.5 0 1 0 0 4H15v3h3v-3h2v-4h-7.35ZM7.5 12.5A1.5 1.5 0 1 1 9 11a1.5 1.5 0 0 1-1.5 1.5Z" />
+          </svg>
+        </button>
+        <button class="icon-btn" id="logout-btn" type="button" aria-label="Sair (bloquear vault)" title="Sair (bloquear vault)" hidden>
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path fill="currentColor" d="M10 3v2H6v14h4v2H4V3h6Zm5.59 4.59 3.7 3.7a1 1 0 0 1 0 1.42l-3.7 3.7-1.41-1.42 2-1.99H9v-2h7.18l-2-1.99 1.41-1.42Z" />
+          </svg>
+        </button>
+        <div class="settings">
+          <button
+            class="icon-btn gear-btn"
+            id="settings-btn"
+            type="button"
+            aria-haspopup="true"
+            aria-expanded="false"
+            aria-label="Configurar intervalo de atualização"
+            title="Configurar intervalo de atualização"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+              <path
+                fill="currentColor"
+                d="M19.14 12.94a7.07 7.07 0 0 0 .06-.94 7.07 7.07 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54a7.3 7.3 0 0 0-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58a7.07 7.07 0 0 0-.06.94 7.07 7.07 0 0 0 .06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.49.4 1.04.71 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54a7.3 7.3 0 0 0 1.62-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64Zm-7.14 2.06a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"
+              />
+            </svg>
+          </button>
+          <div class="settings-panel" id="settings-panel" role="menu" hidden>
+            <p class="settings-title">Atualizar painel a cada</p>
+            <div class="settings-options" id="settings-options">
+              <button type="button" class="interval-opt" data-seconds="5" role="menuitemradio">5s</button>
+              <button type="button" class="interval-opt" data-seconds="10" role="menuitemradio">10s</button>
+              <button type="button" class="interval-opt" data-seconds="30" role="menuitemradio">30s</button>
+              <button type="button" class="interval-opt" data-seconds="60" role="menuitemradio">60s</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <main id="accounts-container" class="accounts-container" hidden></main>
+
+    <p id="empty-state" class="empty-state" hidden>
+      Nenhuma conta cadastrada ainda. Clique no ícone de contas, no topo, para adicionar a primeira.
+    </p>
+
+    <footer class="footer">
+      <span id="footer-text"></span>
+    </footer>
+  </div>
+
+  <!-- Modelo de um card de usina, clonado por account via JS -->
+  <template id="account-template">
+    <section class="account-card">
+      <div class="account-card-header">
+        <span class="brand-dot"></span>
+        <span class="account-label"></span>
+        <span class="plant-name"></span>
+      </div>
+      <div class="account-body">
+        <div class="gauge">
+          <div class="gauge-value">
+            <span class="power-number">--</span>
+            <span class="power-unit">W</span>
+          </div>
+        </div>
+        <div class="account-stats">
+          <div class="account-stat">
+            <span class="account-stat-label">Hoje</span>
+            <span class="account-stat-value"><span class="today-value">--</span> kWh</span>
+          </div>
+          <div class="account-stat">
+            <span class="account-stat-label">Total</span>
+            <span class="account-stat-value"><span class="total-value">--</span> kWh</span>
+          </div>
+          <div class="account-stat">
+            <span class="account-stat-label">Capacidade</span>
+            <span class="account-stat-value"><span class="nominal-value">--</span> W</span>
+          </div>
+        </div>
+      </div>
+      <p class="account-footer"></p>
+    </section>
+  </template>
+
+  <!-- Tela de criação/desbloqueio do vault -->
+  <div class="overlay" id="vault-overlay" hidden>
+    <div class="overlay-box">
+      <h2 id="vault-title">Criar senha mestre</h2>
+      <p class="overlay-text" id="vault-text">
+        Essa senha criptografa os logins da Growatt salvos neste navegador. Ela não é enviada a
+        lugar nenhum — se você esquecê-la, será preciso resetar e cadastrar as contas de novo.
+      </p>
+      <form id="vault-form">
+        <input type="text" id="vault-username" placeholder="Nome de usuário" autocomplete="username" required />
+        <input type="password" id="vault-password" placeholder="Senha mestre" autocomplete="new-password" required />
+        <input type="password" id="vault-password-confirm" placeholder="Confirmar senha mestre" autocomplete="new-password" hidden />
+        <p class="form-error" id="vault-error" hidden></p>
+        <button type="submit" class="btn-primary" id="vault-submit">Criar vault</button>
+      </form>
+      <button type="button" class="btn-link" id="vault-reset" hidden>Esqueci a senha / resetar contas salvas</button>
+    </div>
+  </div>
+
+  <!-- Painel de gerenciamento de contas -->
+  <div class="overlay" id="accounts-overlay" hidden>
+    <div class="overlay-box overlay-box-wide">
+      <div class="overlay-box-header">
+        <h2>Contas Growatt</h2>
+        <button type="button" class="icon-btn" id="accounts-close" aria-label="Fechar">✕</button>
+      </div>
+
+      <details class="vault-settings">
+        <summary>Trocar usuário / senha do vault</summary>
+        <form id="vault-settings-form">
+          <input type="text" id="vs-username" placeholder="Nome de usuário" autocomplete="username" required />
+          <input type="password" id="vs-password" placeholder="Nova senha (deixe em branco para manter)" autocomplete="new-password" />
+          <input type="password" id="vs-password-confirm" placeholder="Confirmar nova senha" autocomplete="new-password" />
+          <p class="form-error" id="vs-error" hidden></p>
+          <p class="form-success" id="vs-success" hidden>Dados do vault atualizados.</p>
+          <button type="submit" class="btn-primary">Salvar alterações</button>
+        </form>
+      </details>
+
+      <ul class="accounts-list" id="accounts-list"></ul>
+
+      <form id="account-form">
+        <input type="hidden" id="account-id" />
+        <input type="text" id="account-label" placeholder="Nome (opcional, ex.: Casa)" autocomplete="off" />
+        <input type="text" id="account-username" placeholder="Usuário Growatt" autocomplete="username" required />
+        <input type="password" id="account-password" placeholder="Senha Growatt" autocomplete="current-password" required />
+        <input type="text" id="account-plant-id" placeholder="ID da usina (opcional)" autocomplete="off" />
+        <p class="form-error" id="account-error" hidden></p>
+        <div class="form-actions">
+          <button type="submit" class="btn-primary" id="account-submit">Adicionar conta</button>
+          <button type="button" class="btn-link" id="account-cancel-edit" hidden>Cancelar edição</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="vault.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
